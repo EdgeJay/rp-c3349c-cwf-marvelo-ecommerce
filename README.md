@@ -27,4 +27,8 @@ NOTE: If first time running of `aws cloudformation create-stack` command failed,
 
 ## Useful Tools
 
+### Generate random bytes using openssl command in Linux
+
+`openssl rand -hex 20`
+
 ### CloudFormation Linter

@@ -18,9 +18,10 @@ Parameters:
   RepositoryName:
     Description: GitHub repository name
     Type: String
-    Default: test
+    Default: rp-c3349c-cwf-marvelo-ecommerce
   GitHubOwner:
     Type: String
+    Default: edgejay
   ApplicationName:
     Description: CodeDeploy application name
     Type: String
@@ -70,7 +71,7 @@ Resources:
     Properties:
       Authentication: GITHUB_HMAC
       AuthenticationConfiguration:
-        SecretToken: {{resolve:secretsmanager:MyGitHubSecret:SecretString:token}}
+        SecretToken: '{{resolve:secretsmanager:MarveloGitHubSecret:SecretString:token}}'
       Filters:
         - JsonPath: $.ref
           MatchEquals: 'refs/heads/{Branch}'
@@ -103,7 +104,7 @@ Resources:
                 Owner: !Ref GitHubOwner
                 Repo: !Ref RepositoryName
                 Branch: !Ref BranchName
-                OAuthToken: {{resolve:secretsmanager:MyGitHubSecret:SecretString:token}}
+                OAuthToken: '{{resolve:secretsmanager:MarveloGitHubSecret:SecretString:accessToken}}'
                 PollForSourceChanges: false
               RunOrder: 1
         - Name: Beta
@@ -142,10 +143,20 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - 'codestar:*'
+                  - 'codestar-connections:PassConnection'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'appconfig:*'
+                Resource: '*'
+              - Effect: Allow
+                Action:
                   - 'codecommit:CancelUploadArchive'
                   - 'codecommit:GetBranch'
                   - 'codecommit:GetCommit'
                   - 'codecommit:GetUploadArchiveStatus'
+                  - 'codecommit:GetRepository'
                   - 'codecommit:UploadArchive'
                 Resource: '*'
               - Effect: Allow

@@ -21,7 +21,7 @@ Parameters:
     Default: rp-c3349c-cwf-marvelo-ecommerce
   GitHubOwner:
     Type: String
-    Default: edgejay
+    Default: EdgeJay
   ApplicationName:
     Description: CodeDeploy application name
     Type: String

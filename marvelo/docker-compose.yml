@@ -1,6 +1,12 @@
 version: "3"
+
+x-aws-vpc: ${AWS_VPC}
+x-aws-cluster: ${AWS_ECS_CLUSTER}
+x-aws-loadbalancer: ${AWS_ELB}
+
 services:
   server:
+    image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -16,6 +22,7 @@ services:
       - database
       - worker
   worker:
+    image: ${WORKER_IMAGE_URI:-marvelo-worker}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -28,6 +35,7 @@ services:
     depends_on:
       - database
   storefront:
+    image: ${STOREFRONT_IMAGE_URI:-marvelo-storefront}:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile-storefront

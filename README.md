@@ -33,6 +33,19 @@ NOTE: If first time running of `aws cloudformation create-stack` command failed,
 
 ### How to deploy pipeline
 
+Before deploying pipeline, remember to extract variables from infrastructure:
+
+```bash
+# Set the VPC Id
+$ VPC_ID=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='VpcId'].OutputValue" --output text)
+
+# Set the ECS Cluster Name
+$ ECS_CLUSTER=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text)
+
+# The Loadbalancer Arn
+$ LOADBALANCER_ARN=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='LoadbalancerId'].OutputValue" --output text)
+```
+
 ```bash
 # Navigate to the Infrastructure Directory
 $ cd ../deployments/pipeline
@@ -41,13 +54,21 @@ $ cd ../deployments/pipeline
 $ aws cloudformation create-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM
+    --capabilities CAPABILITY_IAM \
+    --parameters \
+    ParameterKey=ExistingAwsVpc,ParameterValue=$VPC_ID \
+    ParameterKey=ExistingEcsCluster,ParameterValue=$ECS_CLUSTER \
+    ParameterKey=ExistingLoadbalancer,ParameterValue=$LOADBALANCER_ARN
 
 # If marvelo-pipeline stack already exists in CloudFormation, use this
 $ aws cloudformation update-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM
+    --capabilities CAPABILITY_IAM \
+    --parameters \
+    ParameterKey=ExistingAwsVpc,ParameterValue=$VPC_ID \
+    ParameterKey=ExistingEcsCluster,ParameterValue=$ECS_CLUSTER \
+    ParameterKey=ExistingLoadbalancer,ParameterValue=$LOADBALANCER_ARN
 ```
 
 ## Useful Tools
@@ -57,3 +78,13 @@ $ aws cloudformation update-stack \
 `openssl rand -hex 20`
 
 ### CloudFormation Linter
+
+
+## Notes
+
+### Deleting CloudFormation stacks
+
+If CloudFormation stacks use the following resources, they must be emptied first before deleting:
+
+- S3
+- ECR

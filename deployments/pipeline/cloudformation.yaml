@@ -22,6 +22,16 @@ Parameters:
   GitHubOwner:
     Type: String
     Default: EdgeJay
+  ExistingAwsVpc:
+    Description: Name of existing AWS Vpc
+    Type: AWS::EC2::VPC::Id
+  ExistingLoadbalancer:
+    Description: ARN of existing Application Loadbalancer
+    Type: String
+  ExistingEcsCluster:
+    Description: Name of existing Ecs Cluster
+    Type: String
+
 Resources:
   MarveloServerEcr:
     Type: AWS::ECR::Repository
@@ -47,6 +57,8 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+  
+  # Policies
   CodePipelineArtifactStoreBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
@@ -80,6 +92,81 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': false
+  
+  # IAM policy for pipeline
+  CodePipelineServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AWS-CodePipeline-Service-3
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'codecommit:CancelUploadArchive'
+                  - 'codecommit:GetBranch'
+                  - 'codecommit:GetCommit'
+                  - 'codecommit:GetUploadArchiveStatus'
+                  - 'codecommit:GetRepository'
+                  - 'codecommit:UploadArchive'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'codedeploy:CreateDeployment'
+                  - 'codedeploy:GetApplicationRevision'
+                  - 'codedeploy:GetDeployment'
+                  - 'codedeploy:GetDeploymentConfig'
+                  - 'codedeploy:RegisterApplicationRevision'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'codebuild:BatchGetBuilds'
+                  - 'codebuild:StartBuild'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'devicefarm:ListProjects'
+                  - 'devicefarm:ListDevicePools'
+                  - 'devicefarm:GetRun'
+                  - 'devicefarm:GetUpload'
+                  - 'devicefarm:CreateUpload'
+                  - 'devicefarm:ScheduleRun'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                  - 'lambda:ListFunctions'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'iam:PassRole'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'elasticbeanstalk:*'
+                  - 'ec2:*'
+                  - 'elasticloadbalancing:*'
+                  - 'autoscaling:*'
+                  - 'cloudwatch:*'
+                  - 's3:*'
+                  - 'sns:*'
+                  - 'cloudformation:*'
+                  - 'rds:*'
+                  - 'sqs:*'
+                  - 'ecs:*'
+                Resource: '*'
+
+  # IAM role and policy for image build
   ImageBuildRole:
     Type: AWS::IAM::Role
     Properties:
@@ -90,6 +177,7 @@ Resources:
             Principal:
               Service: codebuild.amazonaws.com
         Version: "2012-10-17"
+
   ImageBuildRolePolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -148,6 +236,68 @@ Resources:
               - !GetAtt MarveloServerEcr.Arn
               - !GetAtt MarveloWorkerEcr.Arn
               - !GetAtt MarveloStoreFrontEcr.Arn
+  
+  # IAM role and policy for extract build
+  ExtractBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+        Version: "2012-10-17"
+
+  ExtractBuildRoleDefaultPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ExtractBuildRoleDefaultPolicy
+      Roles:
+        - Ref: ExtractBuildRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: ExtractBuild
+                    - :*
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:PutObject*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - CodePipelineArtifactStoreBucket
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - CodePipelineArtifactStoreBucket
+                        - Arn
+                    - /*
+
   # CodeBuild to Build the Container Image
   ImageBuild:
     Type: AWS::CodeBuild::Project
@@ -195,6 +345,51 @@ Resources:
                 - docker push $WORKER_IMAGE_URI:$IMAGE_TAG
                 - docker push $STOREFRONT_IMAGE_URI:$IMAGE_TAG
   
+  # CodeBuild to generate CloudFormation template
+  ExtractBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Join
+        - "-"
+        - - !Sub ${AWS::StackName}
+          - "extract-build"
+      Artifacts:
+        Type: CODEPIPELINE
+        EncryptionDisabled: false
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        PrivilegedMode: true
+        Type: LINUX_CONTAINER
+      ServiceRole: !Ref ExtractBuildRole
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - mv /usr/local/bin/docker /usr/bin/docker
+                - curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
+            pre_build:
+              commands:
+                - echo Logging in to Amazon ECR...
+                - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+                - echo Creating Docker Compose Context
+                - curl "http://169.254.170.2${AWS_CONTAINER_CREDENTIALS_RELATIVE_URI}" > creds.json
+                - export AWS_ACCESS_KEY_ID=$(cat creds.json | jq -r .AccessKeyId)
+                - export AWS_SECRET_ACCESS_KEY=$(cat creds.json | jq -r .SecretAccessKey)
+                - export AWS_SESSION_TOKEN=$(cat creds.json | jq -r .Token)
+                - docker context create ecs marveloecs --from-env
+                - docker context use marveloecs
+            build:
+              commands:
+                - echo Convert Compose File
+                - docker --debug compose convert > cloudformation.yml
+          artifacts:
+            files:
+              - cloudformation.yml
+
   # Webhook to receive changes from GitHub
   AppPipelineWebhook:
     Type: 'AWS::CodePipeline::Webhook'
@@ -282,77 +477,63 @@ Resources:
                     }
                   ]
               RunOrder: 1
+        - Name: Compose2Cloudformation
+          Actions:
+            - Name: ExtractCFN
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              Configuration:
+                ProjectName: !Ref ExtractBuild
+                EnvironmentVariables: !Sub |
+                  [
+                    {
+                      "name": "AWS_ACCOUNT_ID",
+                      "value": "${AWS::AccountId}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "SERVER_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloServerEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "WORKER_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloWorkerEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "STOREFRONT_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloStoreFrontEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "IMAGE_TAG",
+                      "value": "#{codepipeline.PipelineExecutionId}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "AWS_ECS_CLUSTER",
+                      "value": "${ExistingEcsCluster}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "AWS_VPC",
+                      "value": "${ExistingAwsVpc}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "AWS_ELB",
+                      "value": "${ExistingLoadbalancer}",
+                      "type": "PLAINTEXT"
+                    }
+                  ]
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: ExtractedCfn
       ArtifactStore:
         Type: S3
         Location: !Ref CodePipelineArtifactStoreBucket
-  CodePipelineServiceRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - codepipeline.amazonaws.com
-            Action: 'sts:AssumeRole'
-      Path: /
-      Policies:
-        - PolicyName: AWS-CodePipeline-Service-3
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'codecommit:CancelUploadArchive'
-                  - 'codecommit:GetBranch'
-                  - 'codecommit:GetCommit'
-                  - 'codecommit:GetUploadArchiveStatus'
-                  - 'codecommit:GetRepository'
-                  - 'codecommit:UploadArchive'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'codedeploy:CreateDeployment'
-                  - 'codedeploy:GetApplicationRevision'
-                  - 'codedeploy:GetDeployment'
-                  - 'codedeploy:GetDeploymentConfig'
-                  - 'codedeploy:RegisterApplicationRevision'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'codebuild:BatchGetBuilds'
-                  - 'codebuild:StartBuild'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'devicefarm:ListProjects'
-                  - 'devicefarm:ListDevicePools'
-                  - 'devicefarm:GetRun'
-                  - 'devicefarm:GetUpload'
-                  - 'devicefarm:CreateUpload'
-                  - 'devicefarm:ScheduleRun'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'lambda:InvokeFunction'
-                  - 'lambda:ListFunctions'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'iam:PassRole'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'elasticbeanstalk:*'
-                  - 'ec2:*'
-                  - 'elasticloadbalancing:*'
-                  - 'autoscaling:*'
-                  - 'cloudwatch:*'
-                  - 's3:*'
-                  - 'sns:*'
-                  - 'cloudformation:*'
-                  - 'rds:*'
-                  - 'sqs:*'
-                  - 'ecs:*'
-                Resource: '*'

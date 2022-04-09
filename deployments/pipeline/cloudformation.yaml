@@ -22,15 +22,14 @@ Parameters:
   GitHubOwner:
     Type: String
     Default: EdgeJay
-  ApplicationName:
-    Description: CodeDeploy application name
-    Type: String
-    Default: DemoApplication
-  BetaFleet:
-    Description: Fleet configured in CodeDeploy
-    Type: String
-    Default: DemoFleet
 Resources:
+  DemoAppEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Join
+        - "-"
+        - - !Sub "${AWS::StackName}"
+          - "demo-app"
   CodePipelineArtifactStoreBucket:
     Type: 'AWS::S3::Bucket'
   CodePipelineArtifactStoreBucketPolicy:
@@ -66,6 +65,113 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': false
+  ImageBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+        Version: "2012-10-17"
+  ImageBuildRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ImageBuildRoleDefaultPolicy
+      Roles:
+        - Ref: ImageBuildRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":logs:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :log-group:/aws/codebuild/
+                    - Ref: ImageBuild
+                    - :*
+          - Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:PutObject*
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - CodePipelineArtifactStoreBucket
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - CodePipelineArtifactStoreBucket
+                        - Arn
+                    - /*
+          - Action:
+              - ecr:GetAuthorizationToken
+            Effect: Allow
+            Resource:
+              - "*"
+          - Action:
+              - ecr:BatchCheckLayerAvailability
+              - ecr:CompleteLayerUpload
+              - ecr:InitiateLayerUpload
+              - ecr:PutImage
+              - ecr:UploadLayerPart
+            Effect: Allow
+            Resource:
+              - !GetAtt DemoAppEcr.Arn
+  # CodeBuild to Build the Container Image
+  ImageBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Join
+        - "-"
+        - - !Sub ${AWS::StackName}
+          - "ImageBuild"
+      Artifacts:
+        Type: CODEPIPELINE
+        EncryptionDisabled: false
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:5.0
+        PrivilegedMode: true
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: AWS_ACCOUNT_ID
+            Type: PLAINTEXT
+            Value: !Ref AWS::AccountId
+      ServiceRole: !Ref ImageBuildRole
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            pre_build:
+              commands:
+                - echo Logging in to Amazon ECR...
+                - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+            build:
+              commands:
+                - echo Building the Docker image...
+                - cd platform/
+                - docker-compose build
+            post_build:
+              commands:
+                - echo Listing Docker images...
+                - docker images
+  
+  # Webhook to receive changes from GitHub
   AppPipelineWebhook:
     Type: 'AWS::CodePipeline::Webhook'
     Properties:
@@ -82,6 +188,8 @@ Resources:
         - AppPipeline
         - Version
       RegisterWithThirdParty: true
+  
+  # CI/CD pipeline
   AppPipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
@@ -107,19 +215,38 @@ Resources:
                 OAuthToken: '{{resolve:secretsmanager:MarveloGitHubSecret:SecretString:accessToken}}'
                 PollForSourceChanges: false
               RunOrder: 1
-        - Name: Beta
+        - Name: Build
           Actions:
-            - Name: BetaAction
+            - Name: BuildContainerImage
               InputArtifacts:
                 - Name: SourceOutput
+              OutputArtifacts:
+                - Name: ImageBuild
               ActionTypeId:
-                Category: Deploy
+                Category: Build
                 Owner: AWS
                 Version: 1
-                Provider: CodeDeploy
+                Provider: CodeBuild
               Configuration:
-                ApplicationName: !Ref ApplicationName
-                DeploymentGroupName: !Ref BetaFleet
+                ProjectName: !Ref ImageBuild
+                EnvironmentVariables: !Sub |
+                  [
+                    {
+                      "name": "AWS_ACCOUNT_ID",
+                      "value": "${AWS::AccountId}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DemoAppEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "IMAGE_TAG",
+                      "value": "#{codepipeline.PipelineExecutionId}",
+                      "type": "PLAINTEXT"
+                    }
+                  ]
               RunOrder: 1
       ArtifactStore:
         Type: S3
@@ -141,15 +268,6 @@ Resources:
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Effect: Allow
-                Action:
-                  - 'codestar:*'
-                  - 'codestar-connections:PassConnection'
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - 'appconfig:*'
-                Resource: '*'
               - Effect: Allow
                 Action:
                   - 'codecommit:CancelUploadArchive'

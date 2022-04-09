@@ -329,9 +329,6 @@ Resources:
                 - echo Listing Docker images...
                 - docker images
                 - echo Pushing Docker images to ECR...
-                - docker tag marvelo_server $SERVER_IMAGE_URI:$IMAGE_TAG
-                - docker tag marvelo_worker $WORKER_IMAGE_URI:$IMAGE_TAG
-                - docker tag marvelo_storefront $STOREFRONT_IMAGE_URI:$IMAGE_TAG
                 - docker push $SERVER_IMAGE_URI:$IMAGE_TAG
                 - docker push $WORKER_IMAGE_URI:$IMAGE_TAG
                 - docker push $STOREFRONT_IMAGE_URI:$IMAGE_TAG

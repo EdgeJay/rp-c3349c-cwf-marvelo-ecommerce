@@ -33,18 +33,14 @@ NOTE: If first time running of `aws cloudformation create-stack` command failed,
 
 ### How to deploy pipeline
 
-Before deploying pipeline, remember to extract variables from infrastructure:
+Before deploying pipeline, make sure infrastructure is deployed already as it depends on VPC, ELB and ECS cluster to be available first.
 
-```bash
-# Set the VPC Id
-$ VPC_ID=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='VpcId'].OutputValue" --output text)
+If creating pipeline for first-time or recreating it after deletion, the GitHub webhook needs to be set up before executing `aws cloudformation` command:
 
-# Set the ECS Cluster Name
-$ ECS_CLUSTER=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text)
-
-# The Loadbalancer Arn
-$ LOADBALANCER_ARN=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='LoadbalancerId'].OutputValue" --output text)
-```
+1. Generate secret
+2. Create/update `token` key of `MarveloGitHubSecret` stored in Secrets Manager with secret value generated in step 1.
+3. Execute `aws cloudformation` command
+4. Get webhook url using `aws codepipeline list-webhooks` command and update GitHub repository Webhook settings.
 
 ```bash
 # Navigate to the Infrastructure Directory
@@ -54,21 +50,13 @@ $ cd ../deployments/pipeline
 $ aws cloudformation create-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM \
-    --parameters \
-    ParameterKey=ExistingAwsVpc,ParameterValue=$VPC_ID \
-    ParameterKey=ExistingEcsCluster,ParameterValue=$ECS_CLUSTER \
-    ParameterKey=ExistingLoadbalancer,ParameterValue=$LOADBALANCER_ARN
+    --capabilities CAPABILITY_IAM
 
 # If marvelo-pipeline stack already exists in CloudFormation, use this
 $ aws cloudformation update-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM \
-    --parameters \
-    ParameterKey=ExistingAwsVpc,ParameterValue=$VPC_ID \
-    ParameterKey=ExistingEcsCluster,ParameterValue=$ECS_CLUSTER \
-    ParameterKey=ExistingLoadbalancer,ParameterValue=$LOADBALANCER_ARN
+    --capabilities CAPABILITY_IAM
 ```
 
 ## Useful Tools

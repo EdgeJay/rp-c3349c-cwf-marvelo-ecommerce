@@ -22,15 +22,6 @@ Parameters:
   GitHubOwner:
     Type: String
     Default: EdgeJay
-  ExistingAwsVpc:
-    Description: Name of existing AWS Vpc
-    Type: AWS::EC2::VPC::Id
-  ExistingLoadbalancer:
-    Description: ARN of existing Application Loadbalancer
-    Type: String
-  ExistingEcsCluster:
-    Description: Name of existing Ecs Cluster
-    Type: String
 
 Resources:
   MarveloServerEcr:
@@ -380,6 +371,12 @@ Resources:
                 - export AWS_ACCESS_KEY_ID=$(cat creds.json | jq -r .AccessKeyId)
                 - export AWS_SECRET_ACCESS_KEY=$(cat creds.json | jq -r .SecretAccessKey)
                 - export AWS_SESSION_TOKEN=$(cat creds.json | jq -r .Token)
+                - export AWS_VPC=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='VpcId'].OutputValue" --output text)
+                - export AWS_ECS_CLUSTER=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='ClusterName'].OutputValue" --output text)
+                - export AWS_ELB=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='LoadbalancerId'].OutputValue" --output text)
+                - echo "AWS_VPC=$AWS_VPC"
+                - echo "AWS_ECS_CLUSTER=$AWS_ECS_CLUSTER"
+                - echo "AWS_ELB=$AWS_ELB"
                 - docker context create ecs marveloecs --from-env
                 - docker context use marveloecs
             build:
@@ -512,21 +509,6 @@ Resources:
                     {
                       "name": "IMAGE_TAG",
                       "value": "#{codepipeline.PipelineExecutionId}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "AWS_ECS_CLUSTER",
-                      "value": "${ExistingEcsCluster}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "AWS_VPC",
-                      "value": "${ExistingAwsVpc}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "AWS_ELB",
-                      "value": "${ExistingLoadbalancer}",
                       "type": "PLAINTEXT"
                     }
                   ]

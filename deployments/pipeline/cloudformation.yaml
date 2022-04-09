@@ -23,15 +23,30 @@ Parameters:
     Type: String
     Default: EdgeJay
 Resources:
-  DemoAppEcr:
+  MarveloServerEcr:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Join
-        - "-"
-        - - !Sub "${AWS::StackName}"
-          - "demo-app"
+      RepositoryName: 'marvelo_server'
+  MarveloWorkerEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: 'marvelo_worker'
+  MarveloStoreFrontEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: 'marvelo_storefront'
   CodePipelineArtifactStoreBucket:
     Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Join
+        - "-"
+        - - !Sub "${AWS::StackName}"
+          - "s3-artifact-store"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
   CodePipelineArtifactStoreBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
@@ -130,7 +145,9 @@ Resources:
               - ecr:UploadLayerPart
             Effect: Allow
             Resource:
-              - !GetAtt DemoAppEcr.Arn
+              - !GetAtt MarveloServerEcr.Arn
+              - !GetAtt MarveloWorkerEcr.Arn
+              - !GetAtt MarveloStoreFrontEcr.Arn
   # CodeBuild to Build the Container Image
   ImageBuild:
     Type: AWS::CodeBuild::Project
@@ -138,7 +155,7 @@ Resources:
       Name: !Join
         - "-"
         - - !Sub ${AWS::StackName}
-          - "ImageBuild"
+          - "image-build"
       Artifacts:
         Type: CODEPIPELINE
         EncryptionDisabled: false
@@ -164,12 +181,16 @@ Resources:
             build:
               commands:
                 - echo Building the Docker image...
-                - cd platform/
+                - cd marvelo/
                 - docker-compose build
             post_build:
               commands:
                 - echo Listing Docker images...
                 - docker images
+                - echo Pushing Docker images to ECR...
+                - docker push $SERVER_IMAGE_URI:$IMAGE_TAG
+                - docker push $WORKER_IMAGE_URI:$IMAGE_TAG
+                - docker push $STOREFRONT_IMAGE_URI:$IMAGE_TAG
   
   # Webhook to receive changes from GitHub
   AppPipelineWebhook:
@@ -193,7 +214,7 @@ Resources:
   AppPipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
-      Name: github-events-pipeline
+      Name: marvelo-pipeline
       RoleArn: !GetAtt 
         - CodePipelineServiceRole
         - Arn
@@ -237,8 +258,18 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "IMAGE_URI",
-                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DemoAppEcr}",
+                      "name": "SERVER_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloServerEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "WORKER_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloWorkerEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "STOREFRONT_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloStoreFrontEcr}",
                       "type": "PLAINTEXT"
                     },
                     {

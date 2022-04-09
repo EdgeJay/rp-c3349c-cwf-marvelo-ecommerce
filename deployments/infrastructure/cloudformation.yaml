@@ -38,7 +38,7 @@ Resources:
       InstanceTenancy: default
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}'
+          Value: 'marvelo-vpc'
 
   PublicSubnetOne:
     Type: AWS::EC2::Subnet
@@ -52,10 +52,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'public-1'
+          Value: 'marvelo-subnet-public1'
         - Key: subnet-type
           Value: 'Public'
 
@@ -71,10 +68,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'public-2'
+          Value: 'marvelo-subnet-public2'
         - Key: subnet-type
           Value: 'Public'
 
@@ -85,10 +79,7 @@ Resources:
         Ref: VPC
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'public-routetable'
+          Value: 'marvelo-public-routetable'
 
   PublicSubnetOneRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -111,10 +102,7 @@ Resources:
     Properties:
       Tags:
       - Key: Name
-        Value: !Join
-          - "-"
-          - - !Sub '${AWS::StackName}'
-            - 'internet-gateway'
+        Value: 'marvelo-igw'
 
   PublicInternetGatewayAssociation:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -137,10 +125,7 @@ Resources:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'nat-gw-eip'
+          Value: 'marvelo-nat-eip'
 
   PublicNatGW:
     Type: AWS::EC2::NatGateway
@@ -153,10 +138,7 @@ Resources:
         Ref: PublicSubnetOne
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'nat-gw'
+          Value: 'marvelo-nat'
 
   PrivateSubnetOne:
     Type: AWS::EC2::Subnet
@@ -169,10 +151,7 @@ Resources:
       CidrBlock: !Ref PrivateSubnetOneCidr
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'private-1'
+          Value: 'marvelo-subnet-private1'
         - Key: subnet-type
           Value: 'Private'
 
@@ -187,10 +166,7 @@ Resources:
       CidrBlock: !Ref PrivateSubnetTwoCidr
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'private-2'
+          Value: 'marvelo-subnet-private2'
         - Key: subnet-type
           Value: 'Private'
 
@@ -201,10 +177,7 @@ Resources:
         Ref: VPC
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - !Sub '${AWS::StackName}'
-              - 'private-routetable'
+          Value: 'marvelo-private-routetable'
 
   PrivateSubnetDefaultRoute:
     Type: AWS::EC2::Route
@@ -232,7 +205,7 @@ Resources:
         Ref: PrivateSubnetTwo
 
   # Security Group for Demo
-  DemoSecurityGroup:
+  WebSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow Access to Web Port from anywhere
@@ -242,16 +215,19 @@ Resources:
           ToPort: 80
           CidrIp: "0.0.0.0/0"
       VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: 'marvelo-asg-web'
 
   # Application Load Balancer
-  DemoLoadbalancer:
+  WebLoadbalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties: 
-      Name: !Sub "${AWS::StackName}-alb"
+      Name: 'marvelo-alb-web'
       Type: "application"
       Scheme: "internet-facing"
       SecurityGroups: 
-        - !Ref DemoSecurityGroup
+        - !Ref WebSecurityGroup
       Subnets: 
         - !Ref PublicSubnetOne
         - !Ref PublicSubnetTwo
@@ -260,7 +236,7 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Join ["-",[!Sub '${AWS::StackName}', 'cluster']]
+      ClusterName: 'marvelo-cluster'
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
@@ -297,10 +273,10 @@ Outputs:
     Value: !Ref 'ECSCluster'
   LoadbalancerId:
     Description: The Demo App Loadbalancer Arn
-    Value: !Ref 'DemoLoadbalancer'
+    Value: !Ref 'WebLoadbalancer'
   LoadbalancerEndpoint:
     Description: The Demo App Loadbalancer Endpoint
     Value: !Join
       - ""
       - - "http://"
-        - !GetAtt 'DemoLoadbalancer.DNSName'
+        - !GetAtt 'WebLoadbalancer.DNSName'

@@ -256,6 +256,12 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Action:
+              - cloudformation:DescribeStacks
+              - ecs:DescribeClusters
+              - elasticloadbalancing:DescribeLoadBalancers
+            Effect: Allow
+            Resource: '*'
+          - Action:
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
@@ -378,7 +384,10 @@ Resources:
                 - docker context use marveloecs
             build:
               commands:
+                - cd marvelo
                 - echo Convert Compose File
+                - docker context ls
+                - docker context inspect marveloecs
                 - docker --debug compose convert > cloudformation.yml
           artifacts:
             files:

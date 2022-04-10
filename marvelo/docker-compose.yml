@@ -12,6 +12,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 3000:3000
+        x-aws-protocol: http
     command: ["./wait-for-it.sh", "database:5432", "--", "yarn", "run:server"]
     volumes:
       - /usr/src/app
@@ -43,6 +44,7 @@ services:
         STOREFRONT_VERSION: 0.1.25
     ports:
       - 4000:4000
+        x-aws-protocol: http
     environment:
       SERVER_API_HOST: http://server
       SERVER_API_PORT: 3000

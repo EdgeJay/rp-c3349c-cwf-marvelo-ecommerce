@@ -259,6 +259,7 @@ Resources:
               - cloudformation:DescribeStacks
               - ecs:DescribeClusters
               - elasticloadbalancing:DescribeLoadBalancers
+              - ecr:*
             Effect: Allow
             Resource: '*'
           - Action:

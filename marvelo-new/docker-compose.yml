@@ -12,17 +12,30 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    links:
+      - "server:server"
   server:
     image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "1337:1337"
+    expose:
+      - "1337"
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
       PORT: 1337
       DEV_ADMIN_ALLOW: "true"
-    
-
+  frontend:
+    image: ${FRONTEND_IMAGE_URI:-marvelo-frontend}:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_STRAPI_API_URL: ${NEXT_PUBLIC_STRAPI_API_URL:-http://server:1337}
+      NEXT_STRAPI_UPLOADS_URL: ${NEXT_STRAPI_UPLOADS_URL:-http://localhost}
+    links:
+      - "server:server"

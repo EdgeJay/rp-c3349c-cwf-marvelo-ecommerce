@@ -4,7 +4,6 @@ WORKDIR /var/marvelo
 
 COPY . ./
 RUN yarn install
-RUN yarn build
 
-EXPOSE 1337
-CMD ["yarn", "start"]
+EXPOSE 3000
+CMD ["yarn", "develop"]

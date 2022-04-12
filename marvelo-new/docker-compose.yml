@@ -1,0 +1,28 @@
+version: "3"
+
+x-aws-vpc: ${AWS_VPC}
+x-aws-cluster: ${AWS_ECS_CLUSTER}
+x-aws-loadbalancer: ${AWS_ELB}
+
+services:
+  nginx:
+    image: ${SERVER_IMAGE_URI:-marvelo-nginx}:${IMAGE_TAG:-latest}
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+  server:
+    image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "1337:1337"
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 1337
+      DEV_ADMIN_ALLOW: "true"
+    
+

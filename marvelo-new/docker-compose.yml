@@ -6,7 +6,7 @@ x-aws-loadbalancer: ${AWS_ELB}
 
 services:
   nginx:
-    image: ${SERVER_IMAGE_URI:-marvelo-nginx}:${IMAGE_TAG:-latest}
+    image: ${NGINX_IMAGE_URI:-marvelo-nginx}:${IMAGE_TAG:-latest}
     build:
       context: ./nginx
       dockerfile: Dockerfile

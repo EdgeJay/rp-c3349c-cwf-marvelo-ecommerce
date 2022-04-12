@@ -24,18 +24,18 @@ Parameters:
     Default: EdgeJay
 
 Resources:
+  MarveloNginxEcr:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: 'marvelo_nginx'
   MarveloServerEcr:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: 'marvelo_server'
-  MarveloWorkerEcr:
+  MarveloFrontendEcr:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: 'marvelo_worker'
-  MarveloStoreFrontEcr:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: 'marvelo_storefront'
+      RepositoryName: 'marvelo_frontend'
   CodePipelineArtifactStoreBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
@@ -224,9 +224,9 @@ Resources:
               - ecr:UploadLayerPart
             Effect: Allow
             Resource:
+              - !GetAtt MarveloNginxEcr.Arn
               - !GetAtt MarveloServerEcr.Arn
-              - !GetAtt MarveloWorkerEcr.Arn
-              - !GetAtt MarveloStoreFrontEcr.Arn
+              - !GetAtt MarveloFrontendEcr.Arn
   
   # IAM role and policy for extract build
   ExtractBuildRole:
@@ -328,16 +328,16 @@ Resources:
             build:
               commands:
                 - echo Building the Docker image...
-                - cd marvelo/
+                - cd marvelo-new/
                 - docker-compose build
             post_build:
               commands:
                 - echo Listing Docker images...
                 - docker images
                 - echo Pushing Docker images to ECR...
+                - docker push $NGINX_IMAGE_URI:$IMAGE_TAG
                 - docker push $SERVER_IMAGE_URI:$IMAGE_TAG
-                - docker push $WORKER_IMAGE_URI:$IMAGE_TAG
-                - docker push $STOREFRONT_IMAGE_URI:$IMAGE_TAG
+                - docker push $FRONTEND_IMAGE_URI:$IMAGE_TAG
   
   # CodeBuild to generate CloudFormation template
   ExtractBuild:
@@ -459,18 +459,18 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
+                      "name": "NGINX_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloNginxEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
                       "name": "SERVER_IMAGE_URI",
                       "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloServerEcr}",
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "WORKER_IMAGE_URI",
-                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloWorkerEcr}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "STOREFRONT_IMAGE_URI",
-                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloStoreFrontEcr}",
+                      "name": "FRONTEND_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloFrontendEcr}",
                       "type": "PLAINTEXT"
                     },
                     {
@@ -498,18 +498,18 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
+                      "name": "NGINX_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloNginxEcr}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
                       "name": "SERVER_IMAGE_URI",
                       "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloServerEcr}",
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "WORKER_IMAGE_URI",
-                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloWorkerEcr}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "STOREFRONT_IMAGE_URI",
-                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloStoreFrontEcr}",
+                      "name": "FRONTEND_IMAGE_URI",
+                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloFrontendEcr}",
                       "type": "PLAINTEXT"
                     },
                     {

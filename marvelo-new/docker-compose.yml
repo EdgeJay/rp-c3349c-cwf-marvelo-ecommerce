@@ -14,6 +14,10 @@ services:
       - "80:80"
     links:
       - "server:server"
+      - "frontend:frontend"
+    depends_on:
+      - server
+      - frontend
   server:
     image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
     build:
@@ -25,7 +29,17 @@ services:
       NODE_ENV: development
       HOST: 0.0.0.0
       PORT: 1337
+      DATABASE_CLIENT: postgres
+      DATABASE_NAME: ${POSTGRES_DB:-strapi}
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${POSTGRES_USER:-strapi}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
       DEV_ADMIN_ALLOW: "true"
+    links:
+      - database
+    depends_on:
+      - database
   frontend:
     image: ${FRONTEND_IMAGE_URI:-marvelo-frontend}:${IMAGE_TAG:-latest}
     build:
@@ -39,3 +53,11 @@ services:
       NEXT_STRAPI_UPLOADS_URL: ${NEXT_STRAPI_UPLOADS_URL:-http://localhost}
     links:
       - "server:server"
+  database:
+    image: postgres
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-strapi}
+      POSTGRES_USER: ${POSTGRES_USER:-strapi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strapi}

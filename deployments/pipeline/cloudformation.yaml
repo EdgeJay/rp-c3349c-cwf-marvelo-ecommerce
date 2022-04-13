@@ -256,11 +256,25 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Action:
+              - servicediscovery:*
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:servicediscovery"
+                    - ":"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :namespace/*
+          - Action:
               - cloudformation:*
               - ec2:*
               - ecs:*
               - elasticloadbalancing:*
               - ecr:*
+              - iam:GetRole
+              - iam:PassRole
               - iam:CreateRole
               - iam:DeleteRole
               - iam:AttachRolePolicy
@@ -270,8 +284,7 @@ Resources:
               - iam:TagRole
               - iam:UntagRole
               - ssm:GetParameters
-              - servicediscovery:CreatePrivateDnsNamespace
-              - servicediscovery:GetOperation
+              - secretsmanager:GetSecretValue
             Effect: Allow
             Resource: '*'
           - Action:
@@ -571,8 +584,8 @@ Resources:
               Configuration:
                 ActionMode: CHANGE_SET_REPLACE
                 RoleArn: !GetAtt [ExtractBuildRole, Arn]
-                StackName: !Sub "${AWS::StackName}"
-                ChangeSetName: !Sub "${AWS::StackName}-change-set"
+                StackName: !Sub "${AWS::StackName}-application"
+                ChangeSetName: !Sub "${AWS::StackName}-application-change-set"
                 TemplatePath: "ExtractedCfn::marvelo-new/cloudformation.yml"
                 Capabilities: CAPABILITY_IAM
               RunOrder: 1
@@ -591,8 +604,8 @@ Resources:
                 Version: "1"
               Configuration:
                 ActionMode: CHANGE_SET_EXECUTE
-                StackName: !Sub "${AWS::StackName}"
-                ChangeSetName: !Sub "${AWS::StackName}-change-set"
+                StackName: !Sub "${AWS::StackName}-application"
+                ChangeSetName: !Sub "${AWS::StackName}-application-change-set"
                 RoleArn: !GetAtt [ExtractBuildRole, Arn]
               RunOrder: 3
       ArtifactStore:

@@ -76,3 +76,9 @@ If CloudFormation stacks use the following resources, they must be emptied first
 
 - S3
 - ECR
+
+## References
+
+https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/infrastructure/cloudformation.yaml
+https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/pipeline/cloudformation.yaml
+https://github.com/stelligent/cloudformation_templates/blob/master/pipeline.yml

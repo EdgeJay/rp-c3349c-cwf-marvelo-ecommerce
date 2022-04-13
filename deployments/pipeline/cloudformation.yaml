@@ -256,10 +256,13 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Action:
-              - cloudformation:DescribeStacks
-              - ecs:DescribeClusters
-              - elasticloadbalancing:DescribeLoadBalancers
+              - cloudformation:*
+              - ecs:*
+              - elasticloadbalancing:*
               - ecr:*
+              - iam:CreateRole
+              - iam:PutRolePolicy
+              - ssm:GetParameters
             Effect: Allow
             Resource: '*'
           - Action:

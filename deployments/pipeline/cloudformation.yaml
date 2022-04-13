@@ -263,6 +263,7 @@ Resources:
               - ecr:*
               - iam:CreateRole
               - iam:DeleteRole
+              - iam:AttachRolePolicy
               - iam:PutRolePolicy
               - iam:DetachRolePolicy
               - iam:ListRoleTags
@@ -270,11 +271,14 @@ Resources:
               - iam:UntagRole
               - ssm:GetParameters
               - servicediscovery:CreatePrivateDnsNamespace
+              - servicediscovery:GetOperation
             Effect: Allow
             Resource: '*'
           - Action:
               - logs:CreateLogGroup
+              - logs:DeleteLogGroup
               - logs:CreateLogStream
+              - logs:DeleteLogStream
               - logs:PutLogEvents
             Effect: Allow
             Resource:

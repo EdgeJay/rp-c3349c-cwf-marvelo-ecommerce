@@ -285,6 +285,7 @@ Resources:
               - iam:UntagRole
               - ssm:GetParameters
               - secretsmanager:GetSecretValue
+              - route53:*
             Effect: Allow
             Resource: '*'
           - Action:

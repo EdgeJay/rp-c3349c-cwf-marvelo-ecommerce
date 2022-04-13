@@ -68,6 +68,11 @@ $ aws cloudformation update-stack \
 ### CloudFormation Linter
 
 
+
+### How to get ALB DNS name via AWS CLI
+
+`aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text`
+
 ## Notes
 
 ### Deleting CloudFormation stacks

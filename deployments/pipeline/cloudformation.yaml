@@ -266,7 +266,7 @@ Resources:
                     - Ref: AWS::Region
                     - ":"
                     - Ref: AWS::AccountId
-                    - :namespace/*
+                    - :*
           - Action:
               - cloudformation:*
               - ec2:*

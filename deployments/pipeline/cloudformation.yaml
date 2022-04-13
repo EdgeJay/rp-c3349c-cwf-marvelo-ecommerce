@@ -385,14 +385,15 @@ Resources:
                 - docker context use marveloecs
             build:
               commands:
-                - cd marvelo
+                - cd marvelo-new
                 - echo Convert Compose File
                 - docker context ls
                 - docker context inspect marveloecs
                 - docker --debug compose convert > cloudformation.yml
+                - ls -al
           artifacts:
             files:
-              - cloudformation.yml
+              - ./marvelo-new/cloudformation.yml
 
   # Webhook to receive changes from GitHub
   AppPipelineWebhook:

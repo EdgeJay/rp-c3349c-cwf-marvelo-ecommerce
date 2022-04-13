@@ -257,11 +257,13 @@ Resources:
         Statement:
           - Action:
               - cloudformation:*
+              - ec2:*
               - ecs:*
               - elasticloadbalancing:*
               - ecr:*
               - iam:CreateRole
               - iam:PutRolePolicy
+              - iam:DetachRolePolicy
               - ssm:GetParameters
             Effect: Allow
             Resource: '*'

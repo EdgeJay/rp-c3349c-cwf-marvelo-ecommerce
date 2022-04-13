@@ -329,6 +329,7 @@ Resources:
             build:
               commands:
                 - echo Building the Docker image...
+                - echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
                 - cd marvelo-new/
                 - docker-compose build
             post_build:
@@ -479,6 +480,11 @@ Resources:
                       "name": "IMAGE_TAG",
                       "value": "#{codepipeline.PipelineExecutionId}",
                       "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "DATABASE_PASSWORD",
+                      "value": "{{resolve:ssm:MarveloDBPassword}}",
+                      "type": "PLAINTEXT"
                     }
                   ]
               RunOrder: 1
@@ -517,6 +523,11 @@ Resources:
                     {
                       "name": "IMAGE_TAG",
                       "value": "#{codepipeline.PipelineExecutionId}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "DATABASE_PASSWORD",
+                      "value": "{{resolve:ssm:MarveloDBPassword}}",
                       "type": "PLAINTEXT"
                     }
                   ]

@@ -535,6 +535,66 @@ Resources:
                 - Name: SourceOutput
               OutputArtifacts:
                 - Name: ExtractedCfn
+        - Name: DeployStage
+          Actions:
+            - Name: CreateChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              InputArtifacts:
+                - Name: ExtractedCfn
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                RoleArn: !GetAtt [ExtractBuildRole, Arn]
+                StackName: !Sub "${AWS::StackName}"
+                ChangeSetName: !Sub "${AWS::StackName}-change-set"
+                TemplatePath: "ExtractedCfn::marvelo-new/cloudformation.yml"
+                Capabilities: CAPABILITY_IAM
+              RunOrder: 1
+            - Name: ApproveChangeSet
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: "1"
+              RunOrder: 2
+            - Name: ExecuteChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                StackName: !Sub "${AWS::StackName}"
+                ChangeSetName: !Sub "${AWS::StackName}-change-set"
+                RoleArn: !GetAtt [ExtractBuildRole, Arn]
+              RunOrder: 3
       ArtifactStore:
         Type: S3
         Location: !Ref CodePipelineArtifactStoreBucket
+
+Outputs:
+  MarveloNginxEcr:
+    Description: Location of ECR Repository storing Marvelo Nginx Image
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloNginxEcr}"
+  MarveloNginxEcrName:
+    Description: ECR Repository to store Marvelo Nginx Image
+    Value: !Ref MarveloNginxEcr
+  MarveloServerEcr:
+    Description: Location of ECR Repository storing Marvelo Server Image
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloServerEcr}"
+  MarveloServerEcrName:
+    Description: ECR Repository to store Marvelo Server Image
+    Value: !Ref MarveloServerEcr
+  MarveloFrontendEcr:
+    Description: Location of ECR Repository storing Marvelo Frontend Image
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloFrontendEcr}"
+  MarveloFrontendEcrName:
+    Description: ECR Repository to store Marvelo Frontend Image
+    Value: !Ref MarveloFrontendEcr
+  S3BucketName:
+    Description: S3 Bucket to store Application Source Code
+    Value: !Ref CodePipelineArtifactStoreBucket

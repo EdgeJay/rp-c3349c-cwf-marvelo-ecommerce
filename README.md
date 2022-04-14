@@ -59,19 +59,19 @@ $ aws cloudformation update-stack \
     --capabilities CAPABILITY_IAM
 ```
 
-## Useful Tools
+## Tips/Useful Tools
 
 ### Generate random bytes using openssl command in Linux
 
 `openssl rand -hex 20`
 
-### CloudFormation Linter
-
-
-
 ### How to get ALB DNS name via AWS CLI
 
 `aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text`
+
+### Fix unresponsive webhook
+
+Change value of name attribute of `AppPipelineWebhook` to force recreation of webhook, and recreate webhook at GitHub repo settings.
 
 ## Notes
 

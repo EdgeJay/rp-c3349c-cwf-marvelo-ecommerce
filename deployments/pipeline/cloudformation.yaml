@@ -213,6 +213,7 @@ Resources:
                     - /*
           - Action:
               - ecr:GetAuthorizationToken
+              - elasticloadbalancing:DescribeLoadBalancers
             Effect: Allow
             Resource:
               - "*"

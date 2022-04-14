@@ -446,7 +446,7 @@ Resources:
           MatchEquals: 'refs/heads/{Branch}'
       TargetPipeline: !Ref AppPipeline
       TargetAction: SourceAction
-      Name: AppPipelineWebhook
+      Name: AppPipelineWebhookv2
       TargetPipelineVersion: !GetAtt 
         - AppPipeline
         - Version

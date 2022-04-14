@@ -1,7 +1,5 @@
 FROM node:14-alpine
 
-ENV NEXT_STRAPI_UPLOADS_URL $NEXT_STRAPI_UPLOADS_URL
-
 WORKDIR /var/marvelo
 
 COPY . ./

@@ -369,6 +369,7 @@ Resources:
             build:
               commands:
                 - echo Building the Docker image...
+                - export NEXT_STRAPI_UPLOADS_URL=${NEXT_STRAPI_UPLOADS_URL}
                 - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
                 - cd marvelo-new/
                 - docker-compose build
@@ -422,6 +423,7 @@ Resources:
                 - echo "AWS_VPC=$AWS_VPC"
                 - echo "AWS_ECS_CLUSTER=$AWS_ECS_CLUSTER"
                 - echo "AWS_ELB=$AWS_ELB"
+                - export NEXT_STRAPI_UPLOADS_URL=${NEXT_STRAPI_UPLOADS_URL}
                 - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
                 - docker context create ecs marveloecs --from-env
                 - docker context use marveloecs

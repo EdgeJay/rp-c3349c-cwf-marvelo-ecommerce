@@ -370,7 +370,7 @@ Resources:
                 - echo Building the Docker image...
                 - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
                 - cd marvelo-new/
-                - NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL docker-compose build
+                - docker-compose build
             post_build:
               commands:
                 - echo Listing Docker images...
@@ -421,6 +421,7 @@ Resources:
                 - echo "AWS_VPC=$AWS_VPC"
                 - echo "AWS_ECS_CLUSTER=$AWS_ECS_CLUSTER"
                 - echo "AWS_ELB=$AWS_ELB"
+                - export NEXT_STRAPI_UPLOADS_URL="http://$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)"
                 - docker context create ecs marveloecs --from-env
                 - docker context use marveloecs
             build:

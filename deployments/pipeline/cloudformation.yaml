@@ -521,7 +521,7 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "DATABASE_PASSWORD",
+                      "name": "POSTGRES_PASSWORD",
                       "value": "{{resolve:ssm:MarveloDBPassword}}",
                       "type": "PLAINTEXT"
                     }
@@ -565,7 +565,7 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "DATABASE_PASSWORD",
+                      "name": "POSTGRES_PASSWORD",
                       "value": "{{resolve:ssm:MarveloDBPassword}}",
                       "type": "PLAINTEXT"
                     }

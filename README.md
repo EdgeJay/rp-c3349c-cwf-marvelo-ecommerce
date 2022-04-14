@@ -42,6 +42,10 @@ If creating pipeline for first-time or recreating it after deletion, the GitHub 
 3. Execute `aws cloudformation` command
 4. Get webhook url using `aws codepipeline list-webhooks` command and update GitHub repository Webhook settings.
 
+#### Remember to get ALB DNS name via AWS CLI
+
+`aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text`
+
 ```bash
 # Navigate to the Infrastructure Directory
 $ cd ../deployments/pipeline
@@ -50,13 +54,17 @@ $ cd ../deployments/pipeline
 $ aws cloudformation create-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM
+    --capabilities CAPABILITY_IAM \
+    --parameters \
+    ParameterKey=ElbV2DnsName,ParameterValue=marvelo-alb-web-726349785.ap-southeast-1.elb.amazonaws.com
 
 # If marvelo-pipeline stack already exists in CloudFormation, use this
 $ aws cloudformation update-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM
+    --capabilities CAPABILITY_IAM \
+    --parameters \
+    ParameterKey=ElbV2DnsName,ParameterValue=marvelo-alb-web-726349785.ap-southeast-1.elb.amazonaws.com
 ```
 
 ## Tips/Useful Tools
@@ -64,10 +72,6 @@ $ aws cloudformation update-stack \
 ### Generate random bytes using openssl command in Linux
 
 `openssl rand -hex 20`
-
-### How to get ALB DNS name via AWS CLI
-
-`aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text`
 
 ### Fix unresponsive webhook
 

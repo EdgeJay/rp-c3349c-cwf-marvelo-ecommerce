@@ -22,6 +22,8 @@ Parameters:
   GitHubOwner:
     Type: String
     Default: EdgeJay
+  ElbV2DnsName:
+    Type: String
 
 Resources:
   MarveloNginxEcr:
@@ -364,7 +366,6 @@ Resources:
               commands:
                 - echo Logging in to Amazon ECR...
                 - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-                - export NEXT_STRAPI_UPLOADS_URL="http://$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)"
             build:
               commands:
                 - echo Building the Docker image...
@@ -421,7 +422,7 @@ Resources:
                 - echo "AWS_VPC=$AWS_VPC"
                 - echo "AWS_ECS_CLUSTER=$AWS_ECS_CLUSTER"
                 - echo "AWS_ELB=$AWS_ELB"
-                - export NEXT_STRAPI_UPLOADS_URL="http://$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)"
+                - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
                 - docker context create ecs marveloecs --from-env
                 - docker context use marveloecs
             build:
@@ -525,6 +526,11 @@ Resources:
                       "name": "POSTGRES_PASSWORD",
                       "value": "{{resolve:ssm:MarveloDBPassword}}",
                       "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "NEXT_STRAPI_UPLOADS_URL",
+                      "value": "${ElbV2DnsName}",
+                      "type": "PLAINTEXT"
                     }
                   ]
               RunOrder: 1
@@ -568,6 +574,11 @@ Resources:
                     {
                       "name": "POSTGRES_PASSWORD",
                       "value": "{{resolve:ssm:MarveloDBPassword}}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "NEXT_STRAPI_UPLOADS_URL",
+                      "value": "${ElbV2DnsName}",
                       "type": "PLAINTEXT"
                     }
                   ]

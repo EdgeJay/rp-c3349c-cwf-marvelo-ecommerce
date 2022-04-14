@@ -370,7 +370,7 @@ Resources:
                 - echo Building the Docker image...
                 - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
                 - cd marvelo-new/
-                - docker-compose build
+                - NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL docker-compose build
             post_build:
               commands:
                 - echo Listing Docker images...

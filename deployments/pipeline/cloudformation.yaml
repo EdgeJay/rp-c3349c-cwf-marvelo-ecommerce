@@ -363,10 +363,11 @@ Resources:
               commands:
                 - echo Logging in to Amazon ECR...
                 - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+                - export NEXT_STRAPI_UPLOADS_URL="http://$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)"
             build:
               commands:
                 - echo Building the Docker image...
-                - echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
+                - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
                 - cd marvelo-new/
                 - docker-compose build
             post_build:

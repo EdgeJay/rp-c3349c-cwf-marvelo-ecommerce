@@ -369,8 +369,8 @@ Resources:
             build:
               commands:
                 - echo Building the Docker image...
-                - export NEXT_STRAPI_UPLOADS_URL=${NEXT_STRAPI_UPLOADS_URL}
-                - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
+                - export NEXT_PUBLIC_STRAPI_UPLOADS_URL=${NEXT_PUBLIC_STRAPI_UPLOADS_URL}
+                - echo "NEXT_PUBLIC_STRAPI_UPLOADS_URL=$NEXT_PUBLIC_STRAPI_UPLOADS_URL"
                 - cd marvelo-new/
                 - docker-compose build
             post_build:
@@ -423,8 +423,8 @@ Resources:
                 - echo "AWS_VPC=$AWS_VPC"
                 - echo "AWS_ECS_CLUSTER=$AWS_ECS_CLUSTER"
                 - echo "AWS_ELB=$AWS_ELB"
-                - export NEXT_STRAPI_UPLOADS_URL=${NEXT_STRAPI_UPLOADS_URL}
-                - echo "NEXT_STRAPI_UPLOADS_URL=$NEXT_STRAPI_UPLOADS_URL"
+                - export NEXT_PUBLIC_STRAPI_UPLOADS_URL=${NEXT_PUBLIC_STRAPI_UPLOADS_URL}
+                - echo "NEXT_PUBLIC_STRAPI_UPLOADS_URL=$NEXT_PUBLIC_STRAPI_UPLOADS_URL"
                 - docker context create ecs marveloecs --from-env
                 - docker context use marveloecs
             build:
@@ -530,7 +530,7 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "NEXT_STRAPI_UPLOADS_URL",
+                      "name": "NEXT_PUBLIC_STRAPI_UPLOADS_URL",
                       "value": "${ElbV2DnsName}",
                       "type": "PLAINTEXT"
                     }
@@ -579,7 +579,7 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "NEXT_STRAPI_UPLOADS_URL",
+                      "name": "NEXT_PUBLIC_STRAPI_UPLOADS_URL",
                       "value": "${ElbV2DnsName}",
                       "type": "PLAINTEXT"
                     }

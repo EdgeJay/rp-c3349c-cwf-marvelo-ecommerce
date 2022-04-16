@@ -3,11 +3,9 @@ FROM node:14-alpine
 WORKDIR /var/marvelo
 
 COPY . ./
-RUN echo "DATABASE_NAME=${DATABASE_NAME}"
-RUN echo "DATABASE_USERNAME=${DATABASE_USERNAME}"
-RUN echo "DATABASE_PASSWORD=${DATABASE_PASSWORD}"
 RUN yarn install
 RUN yarn build
+RUN chmod +x ./docker-entrypoint.sh
 
 EXPOSE 1337
-CMD ["yarn", "start"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

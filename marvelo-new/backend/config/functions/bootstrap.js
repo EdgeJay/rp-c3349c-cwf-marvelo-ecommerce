@@ -61,58 +61,65 @@ const getFilesizeInBytes = filepath => {
 };
 
 const createSeedData = async (files) => {
+  // do not create seed data if data exists
+  const entries = await strapi.query('product').find();
+  if (entries.length === 0) {
+    console.log('Creating seed data...');
 
-  const handleFiles = (data) => {
+    const handleFiles = (data) => {
 
-    var file = files.find(x => x.includes(data.slug));
-    file = `./data/uploads/${file}`;
+      var file = files.find(x => x.includes(data.slug));
+      file = `./data/uploads/${file}`;
 
-    const size = getFilesizeInBytes(file);
-    const array = file.split(".");
-    const ext = array[array.length - 1]
-    const mimeType = `image/.${ext}`;
-    const image = {
-      path: file,
-      name: `${data.slug}.${ext}`,
-      size,
-      type: mimeType
-    };
-    return image
-  }
-
-
-  const categoriesPromises = categories.map(({
-    ...rest
-  }) => {
-    return strapi.services.category.create({
-      ...rest
-    });
-  });
-
-
-  const productsPromises = products.map(async product => {
-    const image = handleFiles(product)
-
-    const files = {
-      image
-    };
-
-    try {
-      const entry = await strapi.query('product').create(product);
-
-      if (files) {
-        await strapi.entityService.uploadFiles(entry, files, {
-          model: 'product'
-        });
-      }
-    } catch (e) {
-      console.log(e);
+      const size = getFilesizeInBytes(file);
+      const array = file.split(".");
+      const ext = array[array.length - 1]
+      const mimeType = `image/.${ext}`;
+      const image = {
+        path: file,
+        name: `${data.slug}.${ext}`,
+        size,
+        type: mimeType
+      };
+      return image
     }
 
-  });
 
-  await Promise.all(categoriesPromises);
-  await Promise.all(productsPromises);
+    const categoriesPromises = categories.map(({
+      ...rest
+    }) => {
+      return strapi.services.category.create({
+        ...rest
+      });
+    });
+
+
+    const productsPromises = products.map(async product => {
+      const image = handleFiles(product)
+
+      const files = {
+        image
+      };
+
+      try {
+        const entry = await strapi.query('product').create(product);
+
+        if (files) {
+          await strapi.entityService.uploadFiles(entry, files, {
+            model: 'product'
+          });
+        }
+      } catch (e) {
+        console.log(e);
+      }
+
+    });
+
+    await Promise.all(categoriesPromises);
+    await Promise.all(productsPromises);
+  } else {
+    console.log('Existing seeded data found');
+  }
 
   // add admin
   // copied from https://github.com/sunnysonx/strapi-plugin-bootstrap-admin-user/blob/main/config/functions/bootstrap.js

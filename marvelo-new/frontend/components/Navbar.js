@@ -7,7 +7,7 @@ const Navbar = () => {
       <Link href="/">
         <a>
           <NextImage
-            src="/strapi.png"
+            src="/marvelo_logo.png"
             alt="home"
             className="logo"
             height="44"

@@ -64,3 +64,23 @@ x-aws-cloudformation:
             # Assign to private subnets
             - subnet-0d8df6521a605d319
             - subnet-0ef1374999b6ec91d
+    NginxServiceDiscoveryEntry:
+      Type: AWS::ServiceDiscovery::Service
+      Properties:
+        HealthCheckCustomConfig:
+          FailureThreshold: 3
+    ServerServiceDiscoveryEntry:
+      Type: AWS::ServiceDiscovery::Service
+      Properties:
+        HealthCheckCustomConfig:
+          FailureThreshold: 3
+    FrontendServiceDiscoveryEntry:
+      Type: AWS::ServiceDiscovery::Service
+      Properties:
+        HealthCheckCustomConfig:
+          FailureThreshold: 3
+    DatabaseServiceDiscoveryEntry:
+      Type: AWS::ServiceDiscovery::Service
+      Properties:
+        HealthCheckCustomConfig:
+          FailureThreshold: 3

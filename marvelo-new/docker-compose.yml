@@ -12,12 +12,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
-    links:
-      - "server:server"
-      - "frontend:frontend"
-    depends_on:
-      - server
-      - frontend
   server:
     image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
     build:
@@ -36,8 +30,6 @@ services:
       DATABASE_USERNAME: ${POSTGRES_USER:-strapi}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
       DEV_ADMIN_ALLOW: "true"
-    links:
-      - database
     depends_on:
       - database
   frontend:
@@ -51,8 +43,6 @@ services:
       NODE_ENV: development
       NEXT_PUBLIC_STRAPI_API_URL: ${NEXT_PUBLIC_STRAPI_API_URL:-http://server:1337}
       NEXT_PUBLIC_STRAPI_UPLOADS_URL: ${NEXT_PUBLIC_STRAPI_UPLOADS_URL:-http://localhost}
-    links:
-      - "server:server"
   database:
     image: postgres
     expose:

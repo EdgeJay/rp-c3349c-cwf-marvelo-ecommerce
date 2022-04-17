@@ -64,10 +64,12 @@ services:
 
 x-aws-cloudformation:
   Resources:
-    database:
+    DatabaseService:
+      Type: AWS::ECS::Service
       Properties:
         NetworkConfiguration:
           AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
             Subnets:
             # Assign to private subnets
             - subnet-0d8df6521a605d319

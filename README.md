@@ -56,7 +56,7 @@ $ aws cloudformation create-stack \
     --template-body file://cloudformation.yaml \
     --capabilities CAPABILITY_IAM \
     --parameters \
-    ParameterKey=ElbV2DnsName,ParameterValue=marvelo-alb-web-726349785.ap-southeast-1.elb.amazonaws.com
+    ParameterKey=ElbV2DnsName,ParameterValue=$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)
 
 # If marvelo-pipeline stack already exists in CloudFormation, use this
 $ aws cloudformation update-stack \
@@ -64,7 +64,7 @@ $ aws cloudformation update-stack \
     --template-body file://cloudformation.yaml \
     --capabilities CAPABILITY_IAM \
     --parameters \
-    ParameterKey=ElbV2DnsName,ParameterValue=marvelo-alb-web-726349785.ap-southeast-1.elb.amazonaws.com
+    ParameterKey=ElbV2DnsName,ParameterValue=$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)
 ```
 
 ## Tips/Useful Tools
@@ -91,3 +91,5 @@ If CloudFormation stacks use the following resources, they must be emptied first
 https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/infrastructure/cloudformation.yaml
 https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/pipeline/cloudformation.yaml
 https://github.com/stelligent/cloudformation_templates/blob/master/pipeline.yml
+https://stackoverflow.com/questions/71730149/docker-compose-ecs-integration-load-balancer-is-of-type-application-project-re
+https://github.com/docker/compose-cli/issues/921#issuecomment-998704609

@@ -12,6 +12,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    depends_on:
+      - server
+      - frontend
   server:
     image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
     build:
@@ -51,36 +54,3 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-strapi}
       POSTGRES_USER: ${POSTGRES_USER:-strapi}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
-
-x-aws-cloudformation:
-  Resources:
-    DatabaseService:
-      Type: AWS::ECS::Service
-      Properties:
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            AssignPublicIp: DISABLED
-            Subnets:
-            # Assign to private subnets
-            - subnet-0d8df6521a605d319
-            - subnet-0ef1374999b6ec91d
-    NginxServiceDiscoveryEntry:
-      Type: AWS::ServiceDiscovery::Service
-      Properties:
-        HealthCheckCustomConfig:
-          FailureThreshold: 3
-    ServerServiceDiscoveryEntry:
-      Type: AWS::ServiceDiscovery::Service
-      Properties:
-        HealthCheckCustomConfig:
-          FailureThreshold: 3
-    FrontendServiceDiscoveryEntry:
-      Type: AWS::ServiceDiscovery::Service
-      Properties:
-        HealthCheckCustomConfig:
-          FailureThreshold: 3
-    DatabaseServiceDiscoveryEntry:
-      Type: AWS::ServiceDiscovery::Service
-      Properties:
-        HealthCheckCustomConfig:
-          FailureThreshold: 3

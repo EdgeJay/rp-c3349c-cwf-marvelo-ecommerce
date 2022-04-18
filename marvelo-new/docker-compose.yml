@@ -12,12 +12,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/healthcheck || exit 1"]
-      interval: 1m30s
-      timeout: 30s
-      retries: 3
-      start_period: 1m
     depends_on:
       - server
       - frontend
@@ -60,3 +54,25 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-strapi}
       POSTGRES_USER: ${POSTGRES_USER:-strapi}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
+
+x-aws-cloudformation:
+  Resources:
+    DatabaseService:
+      Type: AWS::ECS::Service
+      Properties:
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
+    FrontendService:
+      Type: AWS::ECS::Service
+      Properties:
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
+    ServerService:
+      Type: AWS::ECS::Service
+      Properties:
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
+    

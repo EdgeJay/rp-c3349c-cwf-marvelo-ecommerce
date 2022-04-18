@@ -54,25 +54,3 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-strapi}
       POSTGRES_USER: ${POSTGRES_USER:-strapi}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
-
-x-aws-cloudformation:
-  Resources:
-    DatabaseService:
-      Type: AWS::ECS::Service
-      Properties:
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            AssignPublicIp: DISABLED
-    FrontendService:
-      Type: AWS::ECS::Service
-      Properties:
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            AssignPublicIp: DISABLED
-    ServerService:
-      Type: AWS::ECS::Service
-      Properties:
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            AssignPublicIp: DISABLED
-    

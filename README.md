@@ -47,7 +47,7 @@ If creating pipeline for first-time or recreating it after deletion, the GitHub 
 `aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text`
 
 ```bash
-# Navigate to the Infrastructure Directory
+# Navigate to the pipeline Directory
 $ cd ../deployments/pipeline
 
 # Deploy the CloudFormation Template

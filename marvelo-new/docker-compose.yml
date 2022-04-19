@@ -63,7 +63,6 @@ services:
     deploy:
       resources:
         limits:
-          cpu: '0.5'
           memory: 4Gb
     environment:
       NODE_ENV: development

@@ -18,6 +18,9 @@ services:
       timeout: 30s
       retries: 3
       start_period: 2m
+    depends_on:
+      - server
+      - frontend
   server:
     image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
     build:

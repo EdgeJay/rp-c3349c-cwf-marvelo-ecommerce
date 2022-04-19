@@ -89,6 +89,7 @@ If CloudFormation stacks use the following resources, they must be emptied first
 ## References
 
 https://docs.docker.com/cloud/ecs-integration/#tuning-the-cloudformation-template
+https://docs.docker.com/cloud/ecs-compose-features/
 https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/infrastructure/cloudformation.yaml
 https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/pipeline/cloudformation.yaml
 https://github.com/stelligent/cloudformation_templates/blob/master/pipeline.yml

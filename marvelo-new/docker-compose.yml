@@ -60,6 +60,11 @@ services:
       timeout: 30s
       retries: 3
       start_period: 2m
+    deploy:
+      resources:
+        limits:
+          cpu: '1'
+          memory: 4Gb
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_STRAPI_API_URL: ${NEXT_PUBLIC_STRAPI_API_URL:-http://server:1337}

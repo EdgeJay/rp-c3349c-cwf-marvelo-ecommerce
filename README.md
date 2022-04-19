@@ -88,11 +88,14 @@ If CloudFormation stacks use the following resources, they must be emptied first
 
 ## References
 
+https://docs.docker.com/cloud/ecs-integration/#tuning-the-cloudformation-template
 https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/infrastructure/cloudformation.yaml
 https://github.com/aws-containers/demo-app-for-docker-compose/blob/main/pipeline/cloudformation.yaml
 https://github.com/stelligent/cloudformation_templates/blob/master/pipeline.yml
 https://stackoverflow.com/questions/71730149/docker-compose-ecs-integration-load-balancer-is-of-type-application-project-re
 https://github.com/docker/compose-cli/issues/921#issuecomment-998704609
+https://medium.com/rockedscience/fixing-docker-hub-rate-limiting-errors-in-ci-cd-pipelines-ea3c80017acb
+https://nickjanetakis.com/blog/docker-tip-85-define-healthcheck-in-your-docker-compose-file
 
 **docker-compose overlay example**
 

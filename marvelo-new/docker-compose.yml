@@ -87,4 +87,52 @@ x-aws-cloudformation:
         HealthCheckPath: /healthcheck/
         Matcher:
           HttpCode: 200-499
+    DatabaseService:
+      Type: AWS::ECS::Service
+      Properties:
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
+            SecurityGroups:
+              - Ref: DefaultNetwork
+            Subnets:
+              # Assign to private subnets
+              - subnet-0d8df6521a605d319
+              - subnet-0ef1374999b6ec91d
+    FrontendService:
+      Type: AWS::ECS::Service
+      Properties:
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
+            SecurityGroups:
+              - Ref: DefaultNetwork
+            Subnets:
+              # Assign to private subnets
+              - subnet-0d8df6521a605d319
+              - subnet-0ef1374999b6ec91d
+    NginxService:
+      Type: AWS::ECS::Service
+      Properties:
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
+            SecurityGroups:
+              - Ref: DefaultNetwork
+            Subnets:
+              # Assign to private subnets
+              - subnet-0d8df6521a605d319
+              - subnet-0ef1374999b6ec91d
+    ServerService:
+      Type: AWS::ECS::Service
+      Properties:
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            AssignPublicIp: DISABLED
+            SecurityGroups:
+              - Ref: DefaultNetwork
+            Subnets:
+              # Assign to private subnets
+              - subnet-0d8df6521a605d319
+              - subnet-0ef1374999b6ec91d
         

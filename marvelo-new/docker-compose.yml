@@ -27,7 +27,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "1337:1337"
+      - target: 1337
+        published: 1337
+        protocol: tcp
         x-aws-protocol: http
     healthcheck:
       test: curl --fail http://localhost:1337 || exit 1

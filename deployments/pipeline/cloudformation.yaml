@@ -538,7 +538,7 @@ Resources:
                     },
                     {
                       "name": "NEXT_PUBLIC_STRAPI_UPLOADS_URL",
-                      "value": "http://${ElbV2DnsName}",
+                      "value": "http://${ElbV2DnsName}:1337",
                       "type": "PLAINTEXT"
                     }
                   ]
@@ -582,7 +582,7 @@ Resources:
                     },
                     {
                       "name": "NEXT_PUBLIC_STRAPI_UPLOADS_URL",
-                      "value": "http://${ElbV2DnsName}",
+                      "value": "http://${ElbV2DnsName}:1337",
                       "type": "PLAINTEXT"
                     }
                   ]

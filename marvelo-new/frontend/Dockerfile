@@ -10,5 +10,5 @@ RUN yarn install
 
 RUN apk --no-cache add curl
 
-EXPOSE 3000
+EXPOSE 80
 CMD ["yarn", "develop"]

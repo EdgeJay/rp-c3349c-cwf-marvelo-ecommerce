@@ -69,6 +69,9 @@ $ aws cloudformation update-stack \
 
 ## Tips/Useful Tools
 
+- When using Fargate launch type for ECS, be mindful of default resource allocated.
+- Make sure health checks are working fine in local Docker environment.
+- Remember to check and setup health check settings in target groups used by ALB listeners.
 ### Generate random bytes using openssl command in Linux
 
 `openssl rand -hex 20`

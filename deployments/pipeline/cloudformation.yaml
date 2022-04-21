@@ -26,10 +26,6 @@ Parameters:
     Type: String
 
 Resources:
-  MarveloNginxEcr:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: 'marvelo_nginx'
   MarveloServerEcr:
     Type: AWS::ECR::Repository
     Properties:
@@ -239,7 +235,6 @@ Resources:
               - ecr:UploadLayerPart
             Effect: Allow
             Resource:
-              - !GetAtt MarveloNginxEcr.Arn
               - !GetAtt MarveloServerEcr.Arn
               - !GetAtt MarveloFrontendEcr.Arn
   
@@ -396,7 +391,6 @@ Resources:
                 - echo Logging in to Amazon ECR...
                 - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
                 - echo Pushing Docker images to ECR...
-                - docker push $NGINX_IMAGE_URI:$IMAGE_TAG
                 - docker push $SERVER_IMAGE_URI:$IMAGE_TAG
                 - docker push $FRONTEND_IMAGE_URI:$IMAGE_TAG
   
@@ -523,11 +517,6 @@ Resources:
                       "type": "PLAINTEXT"
                     },
                     {
-                      "name": "NGINX_IMAGE_URI",
-                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloNginxEcr}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
                       "name": "SERVER_IMAGE_URI",
                       "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloServerEcr}",
                       "type": "PLAINTEXT"
@@ -569,11 +558,6 @@ Resources:
                     {
                       "name": "AWS_ACCOUNT_ID",
                       "value": "${AWS::AccountId}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "NGINX_IMAGE_URI",
-                      "value": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloNginxEcr}",
                       "type": "PLAINTEXT"
                     },
                     {
@@ -648,12 +632,6 @@ Resources:
         Location: !Ref CodePipelineArtifactStoreBucket
 
 Outputs:
-  MarveloNginxEcr:
-    Description: Location of ECR Repository storing Marvelo Nginx Image
-    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloNginxEcr}"
-  MarveloNginxEcrName:
-    Description: ECR Repository to store Marvelo Nginx Image
-    Value: !Ref MarveloNginxEcr
   MarveloServerEcr:
     Description: Location of ECR Repository storing Marvelo Server Image
     Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MarveloServerEcr}"

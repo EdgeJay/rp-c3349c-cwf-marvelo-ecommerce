@@ -5,22 +5,6 @@ x-aws-cluster: ${AWS_ECS_CLUSTER}
 x-aws-loadbalancer: ${AWS_ELB}
 
 services:
-  nginx:
-    image: ${NGINX_IMAGE_URI:-marvelo-nginx}:${IMAGE_TAG:-latest}
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-    healthcheck:
-      test: curl --fail http://localhost/healthcheck/ || exit 1
-      interval: 1m
-      timeout: 30s
-      retries: 3
-      start_period: 2m
-    depends_on:
-      - server
-      - frontend
   server:
     image: ${SERVER_IMAGE_URI:-marvelo-server}:${IMAGE_TAG:-latest}
     build:
@@ -55,14 +39,18 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    expose:
-      - "3000"
+    ports:
+      - target: 3000
+        published: 80
+        protocol: tcp
     healthcheck:
       test: curl --fail http://localhost:3000/api/healthcheck || exit 1
       interval: 1m
       timeout: 30s
       retries: 3
       start_period: 2m
+    depends_on:
+      - server
     deploy:
       resources:
         limits:
@@ -82,12 +70,12 @@ services:
 
 x-aws-cloudformation:
   Resources:
-    NginxTCP80TargetGroup:
+    FrontendTCP80TargetGroup:
       Type: AWS::ElasticLoadBalancingV2::TargetGroup
       Properties:
         HealthCheckIntervalSeconds: 60
         HealthCheckTimeoutSeconds: 30
-        HealthCheckPath: /healthcheck/
+        HealthCheckPath: /api/healthcheck
         Matcher:
           HttpCode: 200-499
     DatabaseService:
@@ -103,18 +91,6 @@ x-aws-cloudformation:
               - subnet-0d8df6521a605d319
               - subnet-0ef1374999b6ec91d
     FrontendService:
-      Type: AWS::ECS::Service
-      Properties:
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            AssignPublicIp: DISABLED
-            SecurityGroups:
-              - Ref: DefaultNetwork
-            Subnets:
-              # Assign to private subnets
-              - subnet-0d8df6521a605d319
-              - subnet-0ef1374999b6ec91d
-    NginxService:
       Type: AWS::ECS::Service
       Properties:
         NetworkConfiguration:

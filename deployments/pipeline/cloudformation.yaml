@@ -297,6 +297,7 @@ Resources:
               - iam:ListRoleTags
               - iam:TagRole
               - iam:UntagRole
+              - iam:CreateServiceLinkedRole
               - ssm:GetParameters
               - secretsmanager:GetSecretValue
               - route53:*

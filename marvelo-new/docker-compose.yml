@@ -63,7 +63,7 @@ services:
       x-aws-autoscaling:
         min: 1
         max: 2
-        mem: 80
+        cpu: 75
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_STRAPI_API_URL: ${NEXT_PUBLIC_STRAPI_API_URL:-http://server:1337}

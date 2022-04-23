@@ -278,6 +278,7 @@ Resources:
                     - Ref: AWS::AccountId
                     - :*
           - Action:
+              - application-autoscaling:*
               - cloudformation:*
               - ec2:*
               - ecs:*
@@ -287,9 +288,11 @@ Resources:
               - iam:PassRole
               - iam:CreateRole
               - iam:DeleteRole
+              - iam:GetRolePolicy
               - iam:AttachRolePolicy
               - iam:PutRolePolicy
               - iam:DetachRolePolicy
+              - iam:DeleteRolePolicy
               - iam:ListRoleTags
               - iam:TagRole
               - iam:UntagRole

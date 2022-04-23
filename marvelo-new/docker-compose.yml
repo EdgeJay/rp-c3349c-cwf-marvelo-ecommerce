@@ -34,6 +34,12 @@ services:
       DEV_ADMIN_ALLOW: "true"
     depends_on:
       - database
+    deploy:
+      x-aws-autoscaling:
+        min: 1
+        max: 2
+        cpu: 75
+        mem: 80
   frontend:
     image: ${FRONTEND_IMAGE_URI:-marvelo-frontend}:${IMAGE_TAG:-latest}
     build:
@@ -55,6 +61,11 @@ services:
       resources:
         limits:
           memory: 4Gb
+      x-aws-autoscaling:
+        min: 1
+        max: 2
+        cpu: 75
+        mem: 80
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_STRAPI_API_URL: ${NEXT_PUBLIC_STRAPI_API_URL:-http://server:1337}

@@ -280,6 +280,7 @@ Resources:
           - Action:
               - application-autoscaling:*
               - cloudformation:*
+              - cloudwatch:*
               - ec2:*
               - ecs:*
               - elasticloadbalancing:*

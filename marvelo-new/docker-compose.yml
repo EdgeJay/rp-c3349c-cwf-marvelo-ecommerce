@@ -48,6 +48,7 @@ services:
       - target: 80
         published: 80
         protocol: tcp
+        x-aws-protocol: http
     healthcheck:
       test: curl --fail http://localhost:3000/api/healthcheck || exit 1
       interval: 1m
@@ -60,10 +61,10 @@ services:
       resources:
         limits:
           memory: 4Gb
-      x-aws-autoscaling:
-        min: 1
-        max: 2
-        cpu: 75
+      # x-aws-autoscaling:
+      #   min: 1
+      #   max: 2
+      #   cpu: 75
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_STRAPI_API_URL: ${NEXT_PUBLIC_STRAPI_API_URL:-http://server:1337}
@@ -79,14 +80,14 @@ services:
 
 x-aws-cloudformation:
   Resources:
-    # FrontendTCP80TargetGroup:
-    #  Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    #  Properties:
-    #    HealthCheckIntervalSeconds: 120
-    #    HealthCheckTimeoutSeconds: 60
-    #    HealthCheckPath: /api/healthcheck
-    #    Matcher:
-    #      HttpCode: 200-499
+    FrontendTCP80TargetGroup:
+      Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties:
+        HealthCheckIntervalSeconds: 120
+        HealthCheckTimeoutSeconds: 60
+        HealthCheckPath: /api/healthcheck
+        Matcher:
+          HttpCode: 200-499
     DatabaseService:
       Type: AWS::ECS::Service
       Properties:

@@ -39,7 +39,6 @@ services:
         min: 1
         max: 2
         cpu: 75
-        mem: 80
   frontend:
     image: ${FRONTEND_IMAGE_URI:-marvelo-frontend}:${IMAGE_TAG:-latest}
     build:
@@ -64,7 +63,6 @@ services:
       x-aws-autoscaling:
         min: 1
         max: 2
-        cpu: 75
         mem: 80
     environment:
       NODE_ENV: development
@@ -84,8 +82,8 @@ x-aws-cloudformation:
     FrontendTCP80TargetGroup:
       Type: AWS::ElasticLoadBalancingV2::TargetGroup
       Properties:
-        HealthCheckIntervalSeconds: 60
-        HealthCheckTimeoutSeconds: 30
+        HealthCheckIntervalSeconds: 120
+        HealthCheckTimeoutSeconds: 60
         HealthCheckPath: /api/healthcheck
         Matcher:
           HttpCode: 200-499

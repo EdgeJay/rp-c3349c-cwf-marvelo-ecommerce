@@ -79,14 +79,14 @@ services:
 
 x-aws-cloudformation:
   Resources:
-    FrontendTCP80TargetGroup:
-      Type: AWS::ElasticLoadBalancingV2::TargetGroup
-      Properties:
-        HealthCheckIntervalSeconds: 120
-        HealthCheckTimeoutSeconds: 60
-        HealthCheckPath: /api/healthcheck
-        Matcher:
-          HttpCode: 200-499
+    # FrontendTCP80TargetGroup:
+    #  Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    #  Properties:
+    #    HealthCheckIntervalSeconds: 120
+    #    HealthCheckTimeoutSeconds: 60
+    #    HealthCheckPath: /api/healthcheck
+    #    Matcher:
+    #      HttpCode: 200-499
     DatabaseService:
       Type: AWS::ECS::Service
       Properties:

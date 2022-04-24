@@ -12,6 +12,10 @@ if [ ! -f ./.env ]; then
     echo "DATABASE_USERNAME=${DATABASE_USERNAME}" >> ./.env
     echo "DATABASE_PASSWORD=${DATABASE_PASSWORD}" >> ./.env
     echo "DEV_ADMIN_ALLOW=${DEV_ADMIN_ALLOW}" >> ./.env
+    echo "UPLOAD_AWS_ACCESS_KEY_ID=${UPLOAD_AWS_ACCESS_KEY_ID}" >> ./.env
+    echo "UPLOAD_AWS_ACCESS_SECRET=${UPLOAD_AWS_ACCESS_SECRET}" >> ./.env
+    echo "UPLOAD_AWS_REGION=${UPLOAD_AWS_REGION}" >> ./.env
+    echo "UPLOAD_AWS_S3_BUCKET=${UPLOAD_AWS_S3_BUCKET}" >> ./.env
 fi
 
 # Start app

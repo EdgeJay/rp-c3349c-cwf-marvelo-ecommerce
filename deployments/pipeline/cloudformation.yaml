@@ -22,6 +22,9 @@ Parameters:
   GitHubOwner:
     Type: String
     Default: EdgeJay
+  ProductsBucketName:
+    Type: String
+    Default: marvelo-product-images
 
 Resources:
   MarveloServerEcr:
@@ -198,6 +201,15 @@ Resources:
                     - ":"
                     - Ref: AWS::AccountId
                     - :secret:MarveloDBSecret
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":secretsmanager:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :secret:MarveloS3Access
           - Action:
               - ssm:GetParameter
               - ssm:GetParameters
@@ -399,6 +411,18 @@ Resources:
           - Name: POSTGRES_PASSWORD
             Type: PLAINTEXT
             Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbPassword}}'
+          - Name: UPLOAD_AWS_ACCESS_KEY_ID
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloS3Access:SecretString:accessKeyId}}'
+          - Name: UPLOAD_AWS_ACCESS_SECRET
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloS3Access:SecretString:secretAccessKey}}'
+          - Name: UPLOAD_AWS_REGION
+            Type: PLAINTEXT
+            Value: !Ref AWS::Region
+          - Name: UPLOAD_AWS_S3_BUCKET
+            Type: PLAINTEXT
+            Value: !Ref ProductsBucketName
       ServiceRole: !Ref ImageBuildRole
       Source:
         Type: CODEPIPELINE
@@ -414,6 +438,8 @@ Resources:
                 - echo $POSTGRES_HOST
                 - echo $POSTGRES_PORT
                 - echo $NEXT_PUBLIC_STRAPI_UPLOADS_URL
+                - echo $UPLOAD_AWS_REGION
+                - echo $UPLOAD_AWS_S3_BUCKET
                 - echo Logging in to Docker...
                 - export DOCKER_USERNAME=$(aws ssm get-parameter --name MarveloDockerUsername --query "Parameter.Value" --output text)
                 - export DOCKER_PASSWORD=$(aws ssm get-parameter --name MarveloDockerPassword --query "Parameter.Value" --output text)
@@ -459,6 +485,18 @@ Resources:
           - Name: POSTGRES_PASSWORD
             Type: PLAINTEXT
             Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbPassword}}'
+          - Name: UPLOAD_AWS_ACCESS_KEY_ID
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloS3Access:SecretString:accessKeyId}}'
+          - Name: UPLOAD_AWS_ACCESS_SECRET
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloS3Access:SecretString:secretAccessKey}}'
+          - Name: UPLOAD_AWS_REGION
+            Type: PLAINTEXT
+            Value: !Ref AWS::Region
+          - Name: UPLOAD_AWS_S3_BUCKET
+            Type: PLAINTEXT
+            Value: !Ref ProductsBucketName
       ServiceRole: !Ref ExtractBuildRole
       Source:
         Type: CODEPIPELINE
@@ -491,6 +529,8 @@ Resources:
                 - export POSTGRES_PORT=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBPort'].OutputValue" --output text)
                 - echo $POSTGRES_HOST
                 - echo $POSTGRES_PORT
+                - echo $UPLOAD_AWS_REGION
+                - echo $UPLOAD_AWS_S3_BUCKET
                 - docker context create ecs marveloecs --from-env
                 - docker context use marveloecs
             build:

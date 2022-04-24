@@ -23,6 +23,7 @@ Parameters:
     Type: String
     Default: EdgeJay
   ElbV2DnsName:
+    Description: DNS name of application load balancer
     Type: String
 
 Resources:
@@ -176,6 +177,19 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
+          - Action:
+              - secretsmanager:GetSecretValue
+            Effect: Allow
+            Resource:
+              - Fn::Join:
+                  - ""
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":secretsmanager:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :secret:MarveloDBSecret
           - Action:
               - ssm:GetParameter
               - ssm:GetParameters
@@ -368,6 +382,15 @@ Resources:
           - Name: AWS_ACCOUNT_ID
             Type: PLAINTEXT
             Value: !Ref AWS::AccountId
+          - Name: POSTGRES_DB
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbName}}'
+          - Name: POSTGRES_USER
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbUsername}}'
+          - Name: POSTGRES_PASSWORD
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbPassword}}'
       ServiceRole: !Ref ImageBuildRole
       Source:
         Type: CODEPIPELINE
@@ -376,6 +399,11 @@ Resources:
           phases:
             pre_build:
               commands:
+                - echo Retrieving DB host and port...
+                - export POSTGRES_HOST=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBEndpoint'].OutputValue" --output text)
+                - export POSTGRES_PORT=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBPort'].OutputValue" --output text)
+                - echo $POSTGRES_HOST
+                - echo $POSTGRES_PORT
                 - echo Logging in to Docker...
                 - export DOCKER_USERNAME=$(aws ssm get-parameter --name MarveloDockerUsername --query "Parameter.Value" --output text)
                 - export DOCKER_PASSWORD=$(aws ssm get-parameter --name MarveloDockerPassword --query "Parameter.Value" --output text)

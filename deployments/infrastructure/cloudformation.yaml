@@ -29,6 +29,7 @@ Parameters:
     AllowedPattern: ([0-9]{1,3}\.){3}[0-9]{1,3}($|/24)
 
 Resources:
+  # VPC
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -39,7 +40,8 @@ Resources:
       Tags:
         - Key: Name
           Value: 'marvelo-vpc'
-
+  
+  # Public subnets
   PublicSubnetOne:
     Type: AWS::EC2::Subnet
     Properties:
@@ -96,7 +98,8 @@ Resources:
         Ref: PublicRouteTable
       SubnetId:
         Ref: PublicSubnetTwo
-
+  
+  # IGW, NAT
   PublicInternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -139,7 +142,8 @@ Resources:
       Tags:
         - Key: Name
           Value: 'marvelo-nat'
-
+  
+  # Private subnets
   PrivateSubnetOne:
     Type: AWS::EC2::Subnet
     Properties:
@@ -204,11 +208,11 @@ Resources:
       SubnetId:
         Ref: PrivateSubnetTwo
 
-  # Security Group for Demo
+  # Security Group for frontend and backend
   WebSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow Access to Web Port from anywhere
+      GroupDescription: Allow access to frontend and backend applications from anywhere
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -222,6 +226,21 @@ Resources:
       Tags:
         - Key: Name
           Value: 'marvelo-asg-web'
+
+  # Security Group for database
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access to Postgres DB
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: "0.0.0.0/0"
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: 'marvelo-asg-db'
 
   # Application Load Balancer
   WebLoadbalancer:
@@ -266,6 +285,36 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+  
+  # Subnet group for Postgres DB
+  MarveloDBSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupName: marvelo-db-subnet-group
+      DBSubnetGroupDescription: Subnet group for Marvelo DB
+      SubnetIds:
+        - !Ref PublicSubnetOne
+        - !Ref PublicSubnetTwo
+
+  # RDS Postgres DB
+  MarveloDB:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      DBInstanceIdentifier: marvelodb
+      DBInstanceClass: db.t3.micro
+      DBName: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbName}}'
+      MasterUsername: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbUsername}}'
+      MasterUserPassword: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbPassword}}'
+      AllocatedStorage: '20'
+      Engine: 'postgres'
+      StorageEncrypted: true
+      PubliclyAccessible: true
+      DBSubnetGroupName: !Ref MarveloDBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: 'marvelo-db'
 
 # These output values will be available to service templates to use.
 Outputs:
@@ -276,11 +325,17 @@ Outputs:
     Description: The name of the ECS cluster
     Value: !Ref 'ECSCluster'
   LoadbalancerId:
-    Description: The Demo App Loadbalancer Arn
+    Description: Application Loadbalancer Arn
     Value: !Ref 'WebLoadbalancer'
   LoadbalancerEndpoint:
-    Description: The Demo App Loadbalancer Endpoint
+    Description: Application Loadbalancer Endpoint
     Value: !Join
       - ""
       - - "http://"
         - !GetAtt 'WebLoadbalancer.DNSName'
+  DBEndpoint:
+    Description: Postgres DB endpoint address
+    Value: !GetAtt 'MarveloDB.Endpoint.Address'
+  DBPort:
+    Description: Postgres DB port
+    Value: !GetAtt 'MarveloDB.Endpoint.Port'

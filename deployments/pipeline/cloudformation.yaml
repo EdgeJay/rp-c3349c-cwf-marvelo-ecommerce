@@ -22,9 +22,6 @@ Parameters:
   GitHubOwner:
     Type: String
     Default: EdgeJay
-  ElbV2DnsName:
-    Description: DNS name of application load balancer
-    Type: String
 
 Resources:
   MarveloServerEcr:
@@ -413,8 +410,10 @@ Resources:
                 - echo Retrieving DB host and port...
                 - export POSTGRES_HOST=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBEndpoint'].OutputValue" --output text)
                 - export POSTGRES_PORT=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBPort'].OutputValue" --output text)
+                - export NEXT_PUBLIC_STRAPI_UPLOADS_URL=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='MarveloProductsBucketURL'].OutputValue" --output text)
                 - echo $POSTGRES_HOST
                 - echo $POSTGRES_PORT
+                - echo $NEXT_PUBLIC_STRAPI_UPLOADS_URL
                 - echo Logging in to Docker...
                 - export DOCKER_USERNAME=$(aws ssm get-parameter --name MarveloDockerUsername --query "Parameter.Value" --output text)
                 - export DOCKER_PASSWORD=$(aws ssm get-parameter --name MarveloDockerPassword --query "Parameter.Value" --output text)
@@ -422,8 +421,6 @@ Resources:
             build:
               commands:
                 - echo Building the Docker image...
-                - export NEXT_PUBLIC_STRAPI_UPLOADS_URL=${NEXT_PUBLIC_STRAPI_UPLOADS_URL}
-                - echo "NEXT_PUBLIC_STRAPI_UPLOADS_URL=$NEXT_PUBLIC_STRAPI_UPLOADS_URL"
                 - cd marvelo-new/
                 - docker-compose build
             post_build:
@@ -487,7 +484,7 @@ Resources:
                 - echo "AWS_VPC=$AWS_VPC"
                 - echo "AWS_ECS_CLUSTER=$AWS_ECS_CLUSTER"
                 - echo "AWS_ELB=$AWS_ELB"
-                - export NEXT_PUBLIC_STRAPI_UPLOADS_URL=${NEXT_PUBLIC_STRAPI_UPLOADS_URL}
+                - export NEXT_PUBLIC_STRAPI_UPLOADS_URL=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='MarveloProductsBucketURL'].OutputValue" --output text)
                 - echo "NEXT_PUBLIC_STRAPI_UPLOADS_URL=$NEXT_PUBLIC_STRAPI_UPLOADS_URL"
                 - echo Retrieving DB host and port...
                 - export POSTGRES_HOST=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBEndpoint'].OutputValue" --output text)
@@ -592,11 +589,6 @@ Resources:
                       "name": "POSTGRES_PASSWORD",
                       "value": "{{resolve:ssm:MarveloDBPassword}}",
                       "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "NEXT_PUBLIC_STRAPI_UPLOADS_URL",
-                      "value": "http://${ElbV2DnsName}:1337",
-                      "type": "PLAINTEXT"
                     }
                   ]
               RunOrder: 1
@@ -635,11 +627,6 @@ Resources:
                     {
                       "name": "POSTGRES_PASSWORD",
                       "value": "{{resolve:ssm:MarveloDBPassword}}",
-                      "type": "PLAINTEXT"
-                    },
-                    {
-                      "name": "NEXT_PUBLIC_STRAPI_UPLOADS_URL",
-                      "value": "http://${ElbV2DnsName}:1337",
                       "type": "PLAINTEXT"
                     }
                   ]

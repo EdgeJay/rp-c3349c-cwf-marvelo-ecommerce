@@ -27,8 +27,8 @@ services:
       PORT: 1337
       DATABASE_CLIENT: postgres
       DATABASE_NAME: ${POSTGRES_DB:-strapi}
-      DATABASE_HOST: database
-      DATABASE_PORT: 5432
+      DATABASE_HOST: ${POSTGRES_HOST:-database}
+      DATABASE_PORT: ${POSTGRES_PORT:-5432}
       DATABASE_USERNAME: ${POSTGRES_USER:-strapi}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
       DEV_ADMIN_ALLOW: "true"

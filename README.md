@@ -80,6 +80,11 @@ $ aws cloudformation update-stack \
 
 Change value of name attribute of `AppPipelineWebhook` to force recreation of webhook, and recreate webhook at GitHub repo settings.
 
+### Get output from marvelo-infrastructure CloudFormation stack
+
+`aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBEndpoint'].OutputValue" --output text`
+`aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBPort'].OutputValue" --output text`
+
 ## Notes
 
 ### Deleting CloudFormation stacks

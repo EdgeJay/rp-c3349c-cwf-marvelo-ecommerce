@@ -62,8 +62,8 @@ const getFilesizeInBytes = filepath => {
 
 const createSeedData = async (files) => {
   // do not create seed data if data exists
-  const entries = await strapi.query('product').find();
-  if (entries.length === 0) {
+  // const entries = await strapi.query('product').find();
+  // if (entries.length === 0) {
     console.log('Creating seed data...');
 
     const handleFiles = (data) => {
@@ -117,9 +117,9 @@ const createSeedData = async (files) => {
 
     await Promise.all(categoriesPromises);
     await Promise.all(productsPromises);
-  } else {
-    console.log('Existing seeded data found');
-  }
+  // } else {
+  //  console.log('Existing seeded data found');
+  //}
 
   // add admin
   // copied from https://github.com/sunnysonx/strapi-plugin-bootstrap-admin-user/blob/main/config/functions/bootstrap.js

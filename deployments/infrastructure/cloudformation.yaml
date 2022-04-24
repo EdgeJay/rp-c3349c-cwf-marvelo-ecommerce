@@ -315,6 +315,30 @@ Resources:
       Tags:
         - Key: Name
           Value: 'marvelo-db'
+  
+  # S3 bucket for storing image uploads
+  MarveloProductsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: marvelo-product-images
+      AccessControl: PublicRead
+  MarveloProductsBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      PolicyDocument:
+        Id: MarveloProductsBucketPolicyDoc
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Join 
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref MarveloProductsBucket
+                - /*
+      Bucket: !Ref MarveloProductsBucket
 
 # These output values will be available to service templates to use.
 Outputs:
@@ -339,3 +363,11 @@ Outputs:
   DBPort:
     Description: Postgres DB port
     Value: !GetAtt 'MarveloDB.Endpoint.Port'
+  MarveloProductsBucketURL:
+    Value: !Join 
+      - ''
+      - - 'https://'
+        - !GetAtt 
+          - MarveloProductsBucket
+          - DomainName
+    Description: URL of S3 bucket storing Marvelo product images

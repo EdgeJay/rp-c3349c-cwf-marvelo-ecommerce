@@ -452,6 +452,16 @@ Resources:
         Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
         PrivilegedMode: true
         Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: POSTGRES_DB
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbName}}'
+          - Name: POSTGRES_USER
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbUsername}}'
+          - Name: POSTGRES_PASSWORD
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDBSecret:SecretString:dbPassword}}'
       ServiceRole: !Ref ExtractBuildRole
       Source:
         Type: CODEPIPELINE
@@ -479,6 +489,11 @@ Resources:
                 - echo "AWS_ELB=$AWS_ELB"
                 - export NEXT_PUBLIC_STRAPI_UPLOADS_URL=${NEXT_PUBLIC_STRAPI_UPLOADS_URL}
                 - echo "NEXT_PUBLIC_STRAPI_UPLOADS_URL=$NEXT_PUBLIC_STRAPI_UPLOADS_URL"
+                - echo Retrieving DB host and port...
+                - export POSTGRES_HOST=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBEndpoint'].OutputValue" --output text)
+                - export POSTGRES_PORT=$(aws cloudformation describe-stacks --stack-name marvelo-infrastructure --query "Stacks[0].Outputs[?OutputKey=='DBPort'].OutputValue" --output text)
+                - echo $POSTGRES_HOST
+                - echo $POSTGRES_PORT
                 - docker context create ecs marveloecs --from-env
                 - docker context use marveloecs
             build:

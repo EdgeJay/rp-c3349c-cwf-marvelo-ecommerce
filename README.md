@@ -54,17 +54,13 @@ $ cd ../deployments/pipeline
 $ aws cloudformation create-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM \
-    --parameters \
-    ParameterKey=ElbV2DnsName,ParameterValue=$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)
+    --capabilities CAPABILITY_IAM
 
 # If marvelo-pipeline stack already exists in CloudFormation, use this
 $ aws cloudformation update-stack \
     --stack-name marvelo-pipeline \
     --template-body file://cloudformation.yaml \
-    --capabilities CAPABILITY_IAM \
-    --parameters \
-    ParameterKey=ElbV2DnsName,ParameterValue=$(aws elbv2 describe-load-balancers --names marvelo-alb-web --query "LoadBalancers[0].DNSName" --output text)
+    --capabilities CAPABILITY_IAM
 ```
 
 ## Tips/Useful Tools

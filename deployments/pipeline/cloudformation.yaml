@@ -210,18 +210,15 @@ Resources:
                     - ":"
                     - Ref: AWS::AccountId
                     - :secret:MarveloS3Access
-          - Action:
-              - ssm:GetParameter
-              - ssm:GetParameters
-            Effect: Allow
-            Resource:
               - Fn::Join:
                   - ""
-                  - - "arn:aws:ssm:"
+                  - - "arn:"
+                    - Ref: AWS::Partition
+                    - ":secretsmanager:"
                     - Ref: AWS::Region
                     - ":"
                     - Ref: AWS::AccountId
-                    - :parameter/MarveloDocker*
+                    - :secret:MarveloDockerLogin
           - Action:
               - logs:CreateLogGroup
               - logs:CreateLogStream
@@ -423,6 +420,12 @@ Resources:
           - Name: UPLOAD_AWS_S3_BUCKET
             Type: PLAINTEXT
             Value: !Ref ProductsBucketName
+          - Name: DOCKER_USERNAME
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDockerLogin:SecretString:dockerUsername}}'
+          - Name: DOCKER_PASSWORD
+            Type: PLAINTEXT
+            Value: '{{resolve:secretsmanager:MarveloDockerLogin:SecretString:dockerPassword}}'
       ServiceRole: !Ref ImageBuildRole
       Source:
         Type: CODEPIPELINE
@@ -441,8 +444,6 @@ Resources:
                 - echo $UPLOAD_AWS_REGION
                 - echo $UPLOAD_AWS_S3_BUCKET
                 - echo Logging in to Docker...
-                - export DOCKER_USERNAME=$(aws ssm get-parameter --name MarveloDockerUsername --query "Parameter.Value" --output text)
-                - export DOCKER_PASSWORD=$(aws ssm get-parameter --name MarveloDockerPassword --query "Parameter.Value" --output text)
                 - echo ${DOCKER_PASSWORD} | docker login --username ${DOCKER_USERNAME} --password-stdin
             build:
               commands:

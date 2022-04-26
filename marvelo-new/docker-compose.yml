@@ -36,8 +36,6 @@ services:
       UPLOAD_AWS_ACCESS_SECRET: ${UPLOAD_AWS_ACCESS_SECRET}
       UPLOAD_AWS_REGION: ${UPLOAD_AWS_REGION}
       UPLOAD_AWS_S3_BUCKET: ${UPLOAD_AWS_S3_BUCKET}
-    depends_on:
-      - database
     deploy:
       x-aws-autoscaling:
         min: 1
@@ -73,14 +71,6 @@ services:
       NODE_ENV: development
       NEXT_PUBLIC_STRAPI_API_URL: ${NEXT_PUBLIC_STRAPI_API_URL:-http://server:1337}
       NEXT_PUBLIC_STRAPI_UPLOADS_URL: ${NEXT_PUBLIC_STRAPI_UPLOADS_URL:-http://localhost}
-  database:
-    image: postgres
-    expose:
-      - "5432"
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-strapi}
-      POSTGRES_USER: ${POSTGRES_USER:-strapi}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strapi}
 
 x-aws-cloudformation:
   Resources:
@@ -92,18 +82,6 @@ x-aws-cloudformation:
         HealthCheckPath: /api/healthcheck
         Matcher:
           HttpCode: 200-499
-    DatabaseService:
-      Type: AWS::ECS::Service
-      Properties:
-        NetworkConfiguration:
-          AwsvpcConfiguration:
-            AssignPublicIp: DISABLED
-            SecurityGroups:
-              - Ref: DefaultNetwork
-            Subnets:
-              # Assign to private subnets
-              - subnet-0d8df6521a605d319
-              - subnet-0ef1374999b6ec91d
     FrontendService:
       Type: AWS::ECS::Service
       Properties:
